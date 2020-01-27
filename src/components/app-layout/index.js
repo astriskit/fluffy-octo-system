@@ -1,24 +1,21 @@
 import React from "react";
-import { Container, Col, Row } from "react-bootstrap";
+import { observer } from "mobx-react";
+import UserHeader from "./user-header";
+import { useGApp } from "../../utils";
+import "./style.css";
 
 const AppLayout = ({ children }) => {
+  let globalState = useGApp();
   return (
-    <Container fluid>
-      <Row>
-        <Col>
-          <header>Welcome to my site.</header>
-        </Col>
-      </Row>
-      <Row>
-        <Col>{children}</Col>
-      </Row>
-      <Row>
-        <Col>
-          <footer>&copy; 2020-21 HS</footer>
-        </Col>
-      </Row>
-    </Container>
+    <section
+      className={`app-container flex-column ${
+        globalState.isLoggedIn ? "flex-start-stretch" : "flex-centered"
+      }`}
+    >
+      {globalState.isLoggedIn && <UserHeader />}
+      <main className="flex-row flex-centered-stretch">{children}</main>
+    </section>
   );
 };
 
-export default AppLayout;
+export default observer(AppLayout);

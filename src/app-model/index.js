@@ -4,7 +4,7 @@ import appService from "../app.service";
 
 const AppModel = types
   .model("AppModal", {
-    _token: "",
+    _token: types.maybe(types.string),
     _loading: false,
     _regulations: types.optional(types.maybe(RegulationList), {
       all: [],
@@ -18,6 +18,7 @@ const AppModel = types
     },
     setToken: token => {
       self._token = token;
+      localStorage.setItem("_token", token);
     },
     login: flow(function*(email, password) {
       try {
@@ -35,6 +36,7 @@ const AppModel = types
       try {
         self.setLoading(true);
         yield appService.logout(self._token);
+        self.setToken("");
       } catch (err) {
         throw err;
       } finally {

@@ -1,0 +1,14 @@
+.login-form {
+  flex-basis: 25%;
+  padding: 1%;
+}
+.login-form > *,
+.login-form input {
+  font-size: larger;
+  margin: 4px;
+  border-radius: 4px;
+}
+.login-form button {
+  flex-grow: 1;
+  font-size: larger;
+}

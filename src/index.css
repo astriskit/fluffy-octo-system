@@ -1,13 +1,66 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
+}
+
+button {
+  font-size: large;
+  border-radius: 4px;
+  padding: 2px 5px 2px 5px;
+}
+
+button:active {
+  background-color: grey;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-centered {
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-wrapped {
+  flex-wrap: wrap;
+}
+
+.flex-centered-stretch {
+  justify-content: center;
+  align-items: stretch;
+}
+
+.flex-spaced-stretch {
+  justify-content: space-between;
+  align-items: stretch;
+}
+
+.flex-spaced-centered {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-start-stretch {
+  justify-content: start;
+  align-items: stretch;
+}
+
+.flex-self-start {
+  align-self: flex-start;
 }

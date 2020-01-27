@@ -12,7 +12,7 @@ class AppService {
 
   extractData = ({ data }) => data;
 
-  tokenHeader = token => ({ access_token: token });
+  tokenHeader = token => ({ Access_token: token });
 
   getRegulationsFunctionsMapping(token) {
     const config = {
@@ -33,7 +33,9 @@ class AppService {
         })
       }
     };
-    return this._network.get("/RegulationsQuestionsMappings", config);
+    return this._network
+      .get("/RegulationsQuestionsMappings", config)
+      .then(this.extractData);
   }
 
   login(email, password) {
@@ -42,12 +44,13 @@ class AppService {
         "Content-type": "application/json"
       }
     };
-    return this._network.post("/users/login", { email, password }, config);
+    return this._network
+      .post("/users/login", { email, password }, config)
+      .then(this.extractData);
   }
 
   logout(token) {
-    const config = { headers: this.tokenHeader(token) };
-    return this._network.post("/userst/logout", {}, config);
+    return this._network.post(`/users/logout?accessToken=${token}`, {});
   }
 }
 
