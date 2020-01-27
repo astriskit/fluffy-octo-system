@@ -1,13 +1,13 @@
 import { types } from "mobx-state-tree";
 
-const Regulation = types.model({
+const Regulation = types.model("Regulation", {
   regulation: types.maybe(types.string),
   functions: types.maybe(types.array(types.string)),
   id: types.identifier
 });
 
 const RegulationList = types
-  .model({
+  .model("RegulationList", {
     all: types.maybe(types.array(Regulation)),
     selected: types.maybe(types.array(types.reference(Regulation))),
     selectedFuns: types.maybe(types.array(types.string))

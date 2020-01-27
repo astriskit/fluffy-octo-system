@@ -1,11 +1,16 @@
 import { types, flow } from "mobx-state-tree";
-import appService from "./app.service";
+import RegulationList from "./regulation-list";
+import appService from "../app.service";
 
 const AppModel = types
-  .model({
+  .model("AppModal", {
     _token: "",
     _loading: false,
-    _regulations: types.maybe(RegulationList)
+    _regulations: types.optional(types.maybe(RegulationList), {
+      all: [],
+      selected: [],
+      selectedFuns: []
+    })
   })
   .actions(self => ({
     setLoading: loading => {
@@ -43,7 +48,7 @@ const AppModel = types
           self._token
         );
       } catch (error) {
-        throw err;
+        throw error;
       } finally {
         self.setLoading(false);
       }
@@ -54,7 +59,7 @@ const AppModel = types
       return self._token ? true : false;
     },
     get isLoading() {
-      return _loading;
+      return self._loading;
     }
   }));
 
