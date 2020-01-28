@@ -107,7 +107,7 @@ const SelRegAndFunc = ({ history }) => {
   }
 
   return (
-    <article class="selector-pane flex-column flex-spaced-centered">
+    <article className="selector-pane flex-column flex-spaced-centered">
       <input
         type="text"
         placeholder={searchPlaceholder}

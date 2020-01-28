@@ -10,7 +10,7 @@
   text-align: center;
 }
 .selector-pane > .checkbox-pane {
-  max-height: 60vh;
+  max-height: 65vh;
   padding: 6px;
   overflow: auto;
 }
@@ -29,6 +29,9 @@
   border: 1px dashed grey;
   border-radius: 6px;
   padding: 2px;
+}
+.selector-pane > .action-pane {
+  margin-top: 15px;
 }
 .selector-pane > .action-pane > * {
   margin: 4px;
