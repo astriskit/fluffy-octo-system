@@ -2,7 +2,7 @@ import { types } from "mobx-state-tree";
 
 const Regulation = types.model("Regulation", {
   regulation: types.maybe(types.string),
-  functions: types.maybe(types.array(types.string)),
+  functionsMapping: types.maybe(types.array(types.string)),
   id: types.identifier
 });
 
@@ -18,63 +18,73 @@ const RegulationList = types
         self.selected.push(id);
       }
     },
-    selectFun: name => {
-      if (!self.isSelectedFun(name)) {
+    selectFunc: name => {
+      if (!self.isSelectedFunc(name)) {
         self.selectedFuns.push(name);
       }
     },
-    deSelectFun: name => {
-      if (self.isSelectedFun(name)) {
+    deSelectFunc: name => {
+      if (self.isSelectedFunc(name)) {
         self.selectedFuns = self.selectedFuns.filter(fname => fname !== name);
       }
     },
     deSelectReg: ({ id }) => {
       if (self.isSelectedReg(id)) {
-        self.selected = self.selected.filter(sid => sid !== id);
+        self.selected = self.selected.filter(({ id: sid }) => sid !== id);
       }
+    },
+    clearFuncs: () => {
+      self.selectedFuns = [];
+    },
+    clearRegs: () => {
+      self.selected = [];
     }
   }))
   .views(self => ({
     isSelectedReg: id => {
-      if (self.selected.findIndex(sid => id === sid) >= 0) {
+      if (self.selected.findIndex(({ id: sid }) => id === sid) >= 0) {
         return true;
       }
       return false;
     },
-    isSelectedFun: name => {
+    isSelectedFunc: name => {
       return self.selectedFuns.findIndex(fname => name === fname) >= 0;
     },
-    getRegs: (regQuery = "") => {
-      const removeSel = self.all.filter(({ id }) => {
-        if (self.selected.length && self.selected.includes(id)) {
+    get allNotSelectedRegs() {
+      const notSelected = self.all.filter(({ id }) => {
+        if (
+          self.selected.length &&
+          self.selected.map(({ id }) => id).includes(id)
+        ) {
           return false;
         }
         return true;
       });
-      if (!regQuery) return removeSel;
-      return removeSel.filter(({ regulation }) =>
+      return notSelected;
+    },
+    get allSelectedRegs() {
+      return self.selected;
+    },
+    getRegs: (regQuery = "") => {
+      if (!regQuery) return self.all;
+      return self.all.filter(({ regulation }) =>
         regulation.toLowerCase().includes(regQuery.toLowerCase())
       );
     },
-    uniqFunNames: regs => {
+    _uniqFunNames: (regs, funQuery) => {
       let funNames = regs
-        .map(({ functions }) => functions)
+        .map(({ functionsMapping }) => functionsMapping)
         .flat()
-        .filter(name => !self.selectedFuns.includes(name));
-      let uniqFunNames = [...new Set(...funNames)];
+        .filter(name =>
+          funQuery ? name.toLowerCase().includes(funQuery.toLowerCase()) : true
+        );
+      let uniqFunNames = [...new Set(funNames)];
       return uniqFunNames;
     },
-    getFuns: (regQuery, funQuery = "") => {
-      if (!regQuery || !funQuery) return self.uniqFunNames(self.all);
-      return self.uniqFunNames(
-        self
-          .getRegs(regQuery)
-          .filter(({ functions }) =>
-            functions.some(name =>
-              name.toLowerCase().includes(funQuery.toLowerCase())
-            )
-          )
-      );
+    getFuncs: (funQuery = "") => {
+      const regs = self.allSelectedRegs;
+      if (!funQuery) return self._uniqFunNames(regs);
+      return self._uniqFunNames(regs, funQuery);
     }
   }));
 

@@ -43,12 +43,13 @@ const AppModel = types
         self.setLoading(false);
       }
     }),
-    getRegsAndFuns: flow(function*() {
+    getRegs: flow(function*() {
       try {
         self.setLoading(true);
-        self._regulations = yield appService.getRegulationsFunctionsMapping(
+        let items = yield appService.getRegulationsFunctionsMapping(
           self._token
         );
+        self._regulations.all = items;
       } catch (error) {
         throw error;
       } finally {

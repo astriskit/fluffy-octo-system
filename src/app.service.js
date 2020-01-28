@@ -15,17 +15,13 @@ class AppService {
   tokenHeader = token => ({ Access_token: token });
 
   getRegulationsFunctionsMapping(token) {
-    const config = {
-      headers: this.tokenHeader(token)
-    };
     return this._network
-      .get("/RegulationsFunctionsMappings", config)
+      .get(`/RegulationsFunctionsMappings?access_token=${token}`)
       .then(this.extractData);
   }
 
   getRegulationsQuestionsMapping({ regulations, functions, token }) {
     const config = {
-      headers: this.tokenHeader(token),
       params: {
         where: JSON.stringify({
           regulation: { inq: regulations },
@@ -34,7 +30,7 @@ class AppService {
       }
     };
     return this._network
-      .get("/RegulationsQuestionsMappings", config)
+      .get(`/RegulationsQuestionsMappings?access_token=${token}`, config)
       .then(this.extractData);
   }
 
@@ -50,7 +46,7 @@ class AppService {
   }
 
   logout(token) {
-    return this._network.post(`/users/logout?accessToken=${token}`, {});
+    return this._network.post(`/users/logout?access_token=${token}`, {});
   }
 }
 
