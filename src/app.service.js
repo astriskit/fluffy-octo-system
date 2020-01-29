@@ -21,16 +21,10 @@ class AppService {
   }
 
   getRegulationsQuestionsMapping({ regulations, functions, token }) {
-    const config = {
-      params: {
-        where: JSON.stringify({
-          regulation: { inq: regulations },
-          func: functions
-        })
-      }
-    };
     return this._network
-      .get(`/RegulationsQuestionsMappings?access_token=${token}`, config)
+      .get(
+        `/RegulationsQuestionsMappings?access_token=${token}&filter={"where":{"regulation":{"inq":${regulations}}},"func":${functions}}`
+      )
       .then(this.extractData);
   }
 

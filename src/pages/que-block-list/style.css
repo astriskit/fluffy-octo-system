@@ -1,0 +1,57 @@
+.que-block-pane,
+.que-block-pane .selections {
+  flex-grow: 1;
+}
+.que-block-pane .que-blocks {
+  flex-grow: 5;
+}
+.selections {
+  padding: 10px;
+}
+.selections > * {
+  margin: 5px;
+}
+.selections > *:not(:first-child) > :first-child {
+  margin-bottom: 3px;
+  font-weight: bold;
+}
+
+.que-blocks > * {
+  border: 1px grey dashed;
+  border-radius: 6px;
+  margin: 5px;
+  padding: 10px;
+}
+
+.que-list {
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.que-list-item {
+  width: 150px;
+  padding: 5px;
+  margin-bottom: 5px;
+  border: 0.5px solid grey;
+}
+
+.que {
+  width: 60vw;
+  padding: 10px;
+}
+
+.active-que {
+  font-weight: bold;
+}
+
+.que-responses {
+  align-self: flex-end;
+}
+
+.que-responses > * {
+  margin-right: 8px;
+}
+
+.que > * {
+  margin-bottom: 5px;
+}

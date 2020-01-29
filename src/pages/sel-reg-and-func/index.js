@@ -15,6 +15,7 @@ const SelRegAndFunc = ({ history }) => {
 
   useEffect(() => {
     globalState.getRegs();
+    globalState.setMainClass("");
     //eslint-disable-next-line
   }, []);
 

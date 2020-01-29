@@ -37,6 +37,11 @@ button:active {
   align-items: center;
 }
 
+.flex-stretched {
+  justify-content: stretch;
+  align-items: stretch;
+}
+
 .flex-wrapped {
   flex-wrap: wrap;
 }

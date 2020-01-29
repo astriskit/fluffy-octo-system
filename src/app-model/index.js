@@ -1,6 +1,8 @@
 import { types, flow } from "mobx-state-tree";
 import RegulationList from "./regulation-list";
+import QuestionList from "./question-list";
 import appService from "../app.service";
+import { escape } from "../utils";
 
 const AppModel = types
   .model("AppModal", {
@@ -10,9 +12,12 @@ const AppModel = types
       all: [],
       selected: [],
       selectedFuns: []
-    })
+    }),
+    _questions: types.optional(types.maybe(QuestionList), { all: [] }),
+    _mainClass: ""
   })
   .actions(self => ({
+    setMainClass: cls => (self._mainClass = cls),
     setLoading: loading => {
       self._loading = loading;
     },
@@ -55,6 +60,37 @@ const AppModel = types
       } finally {
         self.setLoading(false);
       }
+    }),
+    getQues: flow(function*() {
+      try {
+        const regulations = self._regulations.selected.map(
+          ({ regulation }) => regulation
+        );
+        const functions = self._regulations.selectedFuns;
+        if (!regulations.length || !functions.length) {
+          throw new Error("EMPTY_REGS_FUNCS");
+        }
+        self.setLoading(true);
+        let resultArr = yield appService.getRegulationsQuestionsMapping({
+          regulations: JSON.stringify(regulations, escape),
+          functions: JSON.stringify(functions),
+          token: self._token
+        });
+        resultArr = resultArr
+          .map(({ questions }) => questions)
+          .flat()
+          .reduce((acc, cur) => {
+            if (acc.findIndex(({ id }) => cur.id === id) < 0) {
+              return [...acc, cur];
+            }
+            return acc;
+          }, []);
+        self._questions.all = resultArr;
+      } catch (error) {
+        throw error;
+      } finally {
+        self.setLoading(false);
+      }
     })
   }))
   .views(self => ({
@@ -63,6 +99,12 @@ const AppModel = types
     },
     get isLoading() {
       return self._loading;
+    },
+    get isQuestionable() {
+      return (
+        Boolean(self._regulations.selectedFuns.length) &&
+        Boolean(self._regulations.selected.length)
+      );
     }
   }));
 

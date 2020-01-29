@@ -13,7 +13,12 @@ const AppLayout = ({ children }) => {
       }`}
     >
       {globalState.isLoggedIn && <UserHeader />}
-      <main className="flex-row flex-centered-stretch">{children}</main>
+      <main
+        className={`flex-row ${globalState._mainClass ||
+          "flex-centered-stretch"}`}
+      >
+        {children}
+      </main>
     </section>
   );
 };
