@@ -16,15 +16,26 @@
   font-weight: bold;
 }
 
+.que-blocks {
+  max-height: 90vh;
+  overflow: auto;
+}
+
 .que-blocks > * {
   border: 1px grey dashed;
   border-radius: 6px;
-  margin: 5px;
+  margin: 16px;
   padding: 10px;
+  height: 180px;
+}
+
+.que-list-container {
+  scroll-snap-type: y mandatory;
+  scroll-padding: 10px;
 }
 
 .que-list {
-  max-height: 70vh;
+  max-height: 80vh;
   overflow: auto;
 }
 
@@ -33,15 +44,19 @@
   padding: 5px;
   margin-bottom: 5px;
   border: 0.5px solid grey;
+  background-color: #c5c5c5;
 }
 
 .que {
-  width: 60vw;
+  flex-grow: 1;
   padding: 10px;
+  margin: 25px 3px;
+  scroll-snap-align: start;
+  background-color: #c5c5c5;
 }
 
-.active-que {
-  font-weight: bold;
+.que-answered {
+  background-color: whitesmoke;
 }
 
 .que-responses {

@@ -10,12 +10,7 @@ const QueBlockList = ({ history }) => {
   let globalState = useGApp();
   let [mode, setMode] = useState(QUE_BLOCK);
   let [ques, setQues] = useState([]);
-  let [activeQ, setActiveQ] = useState("");
   let [responses, setResponses] = useState({});
-
-  useEffect(() => {
-    console.log("responses till now", { ...responses });
-  }, [responses]);
 
   useEffect(() => {
     if (globalState.isQuestionable) {
@@ -45,6 +40,7 @@ const QueBlockList = ({ history }) => {
   const queGroups = selFuncs
     .map(func => que.withFunction(func))
     .filter(arr => arr.length);
+
   let asideContent = null;
   let mainContent = null;
 
@@ -52,7 +48,6 @@ const QueBlockList = ({ history }) => {
     const handleBack = () => {
       setMode(QUE_BLOCK);
       setQues([]);
-      setActiveQ("");
       setResponses({});
       alert("Answers not saved!");
     };
@@ -63,31 +58,33 @@ const QueBlockList = ({ history }) => {
       setResponses(res);
     };
 
-    const selectQuestion = idx => setActiveQ(idx);
-    const selectedQuestion = ques.find(({ id: idx }) => activeQ === idx);
+    const handleSave = () => {
+      /**
+       * handle saving responses : mocking now
+       */
+      console.log(responses, "mock-save;responses for the questionnaire!");
+      alert("Saved!");
+      setMode(QUE_BLOCK);
+      setQues([]);
+      setResponses({});
+    };
+
+    const selectQuestion = idx => {
+      const queEl = document.querySelector(`#que-${idx}`);
+      queEl.scrollIntoView();
+    };
+    const isAnswered = idx => responses[idx];
+    const areAllAnswered = () => Object.keys(responses).length === ques.length;
 
     const renderQueList = ({ id: idx }, ind) => (
       <div
         key={idx}
         onClick={() => selectQuestion(idx)}
-        className={`${activeQ === idx ? "active-que" : " "} que-list-item`}
+        className={`que-list-item ${isAnswered(idx) ? "que-answered" : ""}`}
       >
         Question-{ind + 1}
       </div>
     );
-
-    asideContent = (
-      <>
-        <div className="flex-column flex-centered-stretch">
-          <button onClick={handleBack}>Go back</button>
-        </div>
-        <div className="flex-column flex-centered-stretch">
-          <span>Questions</span>
-          <div className="que-list flex-column">{ques.map(renderQueList)}</div>
-        </div>
-      </>
-    );
-
     const renderAnsOptions = (option, idx) => (
       <label key={`${option}-${idx}`}>
         <input
@@ -103,16 +100,42 @@ const QueBlockList = ({ history }) => {
       </label>
     );
 
-    mainContent = selectedQuestion && (
-      <div className="que flex-column flex-centered-stretch">
-        <div className="que-description">{selectedQuestion.description}</div>
+    const questionsRenderer = (item, index) => (
+      <div
+        className={`que flex-column flex-spaced-stretch ${
+          isAnswered(item.id) ? "que-answered" : ""
+        }`}
+        key={item.id}
+        id={`que-${item.id}`}
+      >
+        <div className="que-description">
+          <span>Q-{index + 1}.&nbsp;</span>
+          {item.description}
+        </div>
         <div className="que-responses flex-row flex-centered">
-          {selectedQuestion.answerOptions.map(ans =>
-            renderAnsOptions(ans, selectedQuestion.id)
-          )}
+          {item.answerOptions.map(ans => renderAnsOptions(ans, item.id))}
         </div>
       </div>
     );
+
+    asideContent = (
+      <>
+        <div className="flex-column flex-centered-stretch">
+          <button onClick={handleBack} style={{ marginBottom: "5px" }}>
+            Go back
+          </button>
+          <button onClick={handleSave} disabled={!areAllAnswered()}>
+            Save
+          </button>
+        </div>
+        <div className="flex-column flex-centered-stretch">
+          <span>Questions</span>
+          <div className="que-list flex-column">{ques.map(renderQueList)}</div>
+        </div>
+      </>
+    );
+
+    mainContent = ques.map(questionsRenderer);
   } else if (mode === QUE_BLOCK) {
     const handleUpdate = () => {
       let res = window.confirm(
@@ -125,7 +148,6 @@ const QueBlockList = ({ history }) => {
 
     const handleQBlockClick = ques => {
       setQues(ques);
-      setActiveQ(ques[0].id);
       setMode(QUE_LIST);
     };
 
@@ -167,10 +189,14 @@ const QueBlockList = ({ history }) => {
 
   return (
     <section className="que-block-pane flex-row flex-stretched">
-      <aside className="selections flex-column flex-centered-stretch">
-        {asideContent}
-      </aside>
-      <div className="que-blocks flex-row flex-centered">{mainContent}</div>
+      <aside className="selections flex-column">{asideContent}</aside>
+      <div
+        className={`que-blocks ${
+          mode === QUE_BLOCK ? "flex-row" : "flex-col que-list-container"
+        } flex-centered`}
+      >
+        {mainContent}
+      </div>
     </section>
   );
 };
