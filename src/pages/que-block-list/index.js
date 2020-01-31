@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { observer } from "mobx-react";
 import { useGApp } from "../../utils";
 import "./style.css";
@@ -6,11 +6,26 @@ import "./style.css";
 const QUE_BLOCK = "que-block";
 const QUE_LIST = "que-list";
 
+const LOADING_RES = "loading-responses";
+const SAVING_RES = "saving-response(s)";
+
 const QueBlockList = ({ history }) => {
   let globalState = useGApp();
   let [mode, setMode] = useState(QUE_BLOCK);
   let [ques, setQues] = useState([]);
   let [responses, setResponses] = useState({});
+  let [resLoad, setResLoad] = useState("");
+
+  const getResponses = useCallback(() => {
+    if (!ques.length) return;
+    alert("Loading(mock) responses.");
+    setResLoad(LOADING_RES);
+    setTimeout(() => {
+      // mock getting responses for ques
+      // TODO
+      setResLoad("");
+    }, 1500);
+  }, [ques]);
 
   useEffect(() => {
     if (globalState.isQuestionable) {
@@ -29,6 +44,12 @@ const QueBlockList = ({ history }) => {
     //eslint-disable-next-line
   }, []);
 
+  useEffect(() => {
+    if (mode === QUE_LIST && ques.length) {
+      getResponses();
+    }
+  }, [mode, ques, getResponses]);
+
   if (globalState.isLoading) {
     globalState.setMainClass("");
     return <div>Loading...</div>;
@@ -45,28 +66,30 @@ const QueBlockList = ({ history }) => {
   let mainContent = null;
 
   if (mode === QUE_LIST) {
+    const saveResponse = (qid, ans) => {
+      setResLoad(SAVING_RES);
+      return globalState
+        .saveAns({ queId: qid, ans })
+        .then(() => {
+          setResLoad("");
+        })
+        .catch(err => {
+          alert(`Saving answer failed - ${err.message}`);
+        });
+    };
+
     const handleBack = () => {
       setMode(QUE_BLOCK);
       setQues([]);
       setResponses({});
-      alert("Answers not saved!");
     };
 
     const handleResponse = (quesId, resp) => {
-      let res = { ...responses };
-      res[quesId] = resp;
-      setResponses(res);
-    };
-
-    const handleSave = () => {
-      /**
-       * handle saving responses : mocking now
-       */
-      console.log(responses, "mock-save;responses for the questionnaire!");
-      alert("Saved!");
-      setMode(QUE_BLOCK);
-      setQues([]);
-      setResponses({});
+      saveResponse(quesId, resp).then(() => {
+        let res = { ...responses };
+        res[quesId] = resp;
+        setResponses(res);
+      });
     };
 
     const selectQuestion = idx => {
@@ -74,12 +97,11 @@ const QueBlockList = ({ history }) => {
       queEl.scrollIntoView();
     };
     const isAnswered = idx => responses[idx];
-    const areAllAnswered = () => Object.keys(responses).length === ques.length;
 
     const renderQueList = ({ id: idx }, ind) => (
       <div
         key={idx}
-        onClick={() => selectQuestion(idx)}
+        onClick={() => !resLoad && selectQuestion(idx)}
         className={`que-list-item ${isAnswered(idx) ? "que-answered" : ""}`}
       >
         Question-{ind + 1}
@@ -95,6 +117,7 @@ const QueBlockList = ({ history }) => {
           }}
           value={option}
           checked={responses[idx] === option}
+          disabled={resLoad}
         />
         {option}
       </label>
@@ -121,11 +144,8 @@ const QueBlockList = ({ history }) => {
     asideContent = (
       <>
         <div className="flex-column flex-centered-stretch">
-          <button onClick={handleBack} style={{ marginBottom: "5px" }}>
+          <button onClick={handleBack} disabled={resLoad}>
             Go back
-          </button>
-          <button onClick={handleSave} disabled={!areAllAnswered()}>
-            Save
           </button>
         </div>
         <div className="flex-column flex-centered-stretch">

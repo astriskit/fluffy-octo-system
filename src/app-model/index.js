@@ -7,14 +7,14 @@ import { escape } from "../utils";
 const AppModel = types
   .model("AppModal", {
     _token: types.maybe(types.string),
-    _loading: false,
+    _loading: false, // page-wide loading
     _regulations: types.optional(types.maybe(RegulationList), {
       all: [],
       selected: [],
       selectedFuns: []
     }),
     _questions: types.optional(types.maybe(QuestionList), { all: [] }),
-    _mainClass: ""
+    _mainClass: "" // [ui]
   })
   .actions(self => ({
     setMainClass: cls => (self._mainClass = cls),
@@ -90,6 +90,17 @@ const AppModel = types
         throw error;
       } finally {
         self.setLoading(false);
+      }
+    }),
+    saveAns: flow(function*({ queId, ans }) {
+      try {
+        return yield appService.saveResponse({
+          queId,
+          ans,
+          token: self._token
+        });
+      } catch (error) {
+        throw error;
       }
     })
   }))
