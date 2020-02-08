@@ -33,6 +33,7 @@ const AppModel = types
       try {
         self.setLoading(true);
         let creds = yield appService.login(email, password);
+        self._regulations.selected = [];
         self.setCredentials(creds);
       } catch (err) {
         throw err;
@@ -59,7 +60,10 @@ const AppModel = types
           self._token
         );
         self._regulations.all = items;
-        let selected = yield appService.getUserRegulations(self._token);
+        let selected = yield appService.getUserRegulations(
+          self._userId,
+          self._token
+        );
         let selectedRegs = selected.filter(({ archived = false }) => !archived);
         if (selectedRegs.length) {
           let selectedFuns = selectedRegs.reduce((acc, { functions }) => {
