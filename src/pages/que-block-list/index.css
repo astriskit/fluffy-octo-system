@@ -1,0 +1,4 @@
+.limit-80vh .ant-card-body {
+  max-height: 80vh;
+  overflow: auto;
+}

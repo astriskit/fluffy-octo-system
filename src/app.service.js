@@ -28,31 +28,23 @@ class AppService {
       .then(this.extractData);
   }
 
-  saveResponse({ queId, ans, token }) {
+  getUserResponses({ token, userId = null }) {
+    let url = `/Responses?access_token=${token}`;
+    if (userId) {
+      url += `&filter={"where":{"userId":"${userId}"}}`;
+    }
+    return this._network.get(url).then(this.extractData);
+  }
+
+  updateResponse({ id, userId: _, ...r }, token) {
     const config = {
       headers: {
         "Content-type": "application/json"
       }
     };
-    const data = { questionId: queId, answer: ans };
-    return this._network
-      .post(`/Responses?access_token==${token}`, data, config)
-      .then(this.extractData);
-  }
-
-  getResponse({ queId, token }) {
-    // TODO
-  }
-
-  updateResponse({ ansId, queId, ans, token }) {
-    const config = {
-      headers: {
-        "Content-type": "application/json"
-      }
-    };
-    const data = { questionId: queId, answer: ans };
+    const data = r;
     return this._network.patch(
-      `/Responses/${ansId}?access_token=${token}`,
+      `/Responses/${id}?access_token=${token}`,
       data,
       config
     );
@@ -71,6 +63,12 @@ class AppService {
 
   logout(token) {
     return this._network.post(`/users/logout?access_token=${token}`, {});
+  }
+
+  getUserRegulations(token) {
+    return this._network
+      .get(`RegulationsUsers?access_token=${token}`)
+      .then(this.extractData);
   }
 }
 

@@ -18,6 +18,12 @@ const RegulationList = types
         self.selected.push(id);
       }
     },
+    selectRegByName: name => {
+      let found = self.all.find(({ regulation }) => regulation === name);
+      if (found) {
+        self.selectReg(found);
+      }
+    },
     selectFunc: name => {
       if (!self.isSelectedFunc(name)) {
         self.selectedFuns.push(name);

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { observer } from "mobx-react";
+import { Form, Input, Button, Card } from "antd";
 import { useGApp } from "../../utils";
-import "./style.css";
+import "./index.css";
 
 const Login = props => {
   let globalState = useGApp();
@@ -35,36 +36,37 @@ const Login = props => {
   };
 
   return (
-    <fieldset className="login-form flex-column flex-centered">
-      <legend>Login</legend>
-      <label className="flex-row flex-spaced-centered">
-        Email
-        <input
-          placeholder="Email"
-          type="text"
-          onChange={setEmail}
-          value={state.email || ""}
-          disabled={globalState.isLoading}
-          required
-        />
-      </label>
-      <label className="flex-row flex-spaced-centered">
-        Password
-        <input
-          placeholder="Password"
-          type="password"
-          onChange={setPassword}
-          value={state.password || ""}
-          disabled={globalState.isLoading}
-          required
-        />
-      </label>
-      <div className="flex-row flex-centered">
-        <button disabled={globalState.isLoading} onClick={handleLogin}>
-          Login
-        </button>
-      </div>
-    </fieldset>
+    <Card title="Login" size="small" className="login-card">
+      <Form layout="inline">
+        <Form.Item label="Email" required>
+          <Input
+            placeholder="Email"
+            type="email"
+            onChange={setEmail}
+            value={state.email || ""}
+            disabled={globalState.isLoading}
+          />
+        </Form.Item>
+        <Form.Item label="Password" required>
+          <Input
+            placeholder="Password"
+            type="password"
+            onChange={setPassword}
+            value={state.password || ""}
+            disabled={globalState.isLoading}
+          />
+        </Form.Item>
+        <Form.Item>
+          <Button
+            loading={globalState.isLoading}
+            onClick={handleLogin}
+            type="primary"
+          >
+            Login
+          </Button>
+        </Form.Item>
+      </Form>
+    </Card>
   );
 };
 

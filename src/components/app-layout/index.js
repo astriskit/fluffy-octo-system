@@ -2,24 +2,24 @@ import React from "react";
 import { observer } from "mobx-react";
 import UserHeader from "./user-header";
 import { useGApp } from "../../utils";
-import "./style.css";
+import { Layout } from "antd";
 
 const AppLayout = ({ children }) => {
   let globalState = useGApp();
   return (
-    <section
-      className={`app-container flex-column ${
-        globalState.isLoggedIn ? "flex-start-stretch" : "flex-centered"
-      }`}
-    >
-      {globalState.isLoggedIn && <UserHeader />}
-      <main
-        className={`flex-row ${globalState._mainClass ||
-          "flex-centered-stretch"}`}
+    <Layout>
+      <Layout.Header
+        style={{
+          display: "flex",
+          justifyContent: "stretch",
+          alignItems: "center",
+          color: "white"
+        }}
       >
-        {children}
-      </main>
-    </section>
+        {globalState.isLoggedIn ? <UserHeader /> : <></>}
+      </Layout.Header>
+      <Layout.Content>{children}</Layout.Content>
+    </Layout>
   );
 };
 

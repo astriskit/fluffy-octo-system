@@ -7,6 +7,7 @@ import { escape } from "../utils";
 const AppModel = types
   .model("AppModal", {
     _token: types.maybe(types.string),
+    _booting: false,
     _loading: false, // page-wide loading
     _regulations: types.optional(types.maybe(RegulationList), {
       all: [],
@@ -14,22 +15,25 @@ const AppModel = types
       selectedFuns: []
     }),
     _questions: types.optional(types.maybe(QuestionList), { all: [] }),
-    _mainClass: "" // [ui]
+    _mainClass: "", // [ui]
+    _userId: ""
   })
   .actions(self => ({
     setMainClass: cls => (self._mainClass = cls),
     setLoading: loading => {
       self._loading = loading;
     },
-    setToken: token => {
+    setCredentials: ({ id: token = "", userId = "" }) => {
       self._token = token;
+      self._userId = userId;
       localStorage.setItem("_token", token);
+      localStorage.setItem("_userId", userId);
     },
     login: flow(function*(email, password) {
       try {
         self.setLoading(true);
-        let { id: token } = yield appService.login(email, password);
-        self.setToken(token);
+        let creds = yield appService.login(email, password);
+        self.setCredentials(creds);
       } catch (err) {
         throw err;
       } finally {
@@ -41,7 +45,7 @@ const AppModel = types
       try {
         self.setLoading(true);
         yield appService.logout(self._token);
-        self.setToken("");
+        self.setCredentials({});
       } catch (err) {
         throw err;
       } finally {
@@ -55,6 +59,22 @@ const AppModel = types
           self._token
         );
         self._regulations.all = items;
+        let selected = yield appService.getUserRegulations(self._token);
+        let selectedRegs = selected.filter(({ archived = false }) => !archived);
+        if (selectedRegs.length) {
+          let selectedFuns = selectedRegs.reduce((acc, { functions }) => {
+            if (!acc.length) {
+              return functions;
+            }
+            return [...new Set([...functions, ...acc])];
+          }, []);
+          selectedRegs
+            .map(({ regulation }) => regulation)
+            .map(self._regulations.selectRegByName);
+          self._regulations.selectedFuns = selectedFuns;
+          return true;
+        }
+        return false;
       } catch (error) {
         throw error;
       } finally {
@@ -92,21 +112,29 @@ const AppModel = types
         self.setLoading(false);
       }
     }),
-    saveAns: flow(function*({ queId, ans }) {
+    saveAns: flow(function*(r) {
       try {
-        return yield appService.saveResponse({
-          queId,
-          ans,
-          token: self._token
+        return yield appService.updateResponse(r, self._token);
+      } catch (error) {
+        throw error;
+      }
+    }),
+    getAns: flow(function*() {
+      try {
+        return yield appService.getUserResponses({
+          token: self._token,
+          userId: self._userId
         });
       } catch (error) {
         throw error;
       }
-    })
+    }),
+    boot: () => {},
+    shut: () => {}
   }))
   .views(self => ({
     get isLoggedIn() {
-      return self._token ? true : false;
+      return self._token && self._userId ? true : false;
     },
     get isLoading() {
       return self._loading;
@@ -116,6 +144,9 @@ const AppModel = types
         Boolean(self._regulations.selectedFuns.length) &&
         Boolean(self._regulations.selected.length)
       );
+    },
+    get isBooting() {
+      return self._booting;
     }
   }));
 

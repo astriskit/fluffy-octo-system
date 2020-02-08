@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { observer } from "mobx-react";
+import { Card, Row, Col, Button, Tag, List, Radio } from "antd";
 import { useGApp } from "../../utils";
-import "./style.css";
+import "./index.css";
 
 const QUE_BLOCK = "que-block";
 const QUE_LIST = "que-list";
@@ -13,18 +14,35 @@ const QueBlockList = ({ history }) => {
   let globalState = useGApp();
   let [mode, setMode] = useState(QUE_BLOCK);
   let [ques, setQues] = useState([]);
-  let [responses, setResponses] = useState({});
+  let [responses, setResponses] = useState(() => new Map());
   let [resLoad, setResLoad] = useState("");
 
   const getResponses = useCallback(() => {
     if (!ques.length) return;
-    alert("Loading(mock) responses.");
     setResLoad(LOADING_RES);
-    setTimeout(() => {
-      // mock getting responses for ques
-      // TODO
-      setResLoad("");
-    }, 1500);
+    globalState
+      .getAns()
+      .then(res => {
+        let r = new Map();
+        ques.forEach(({ question }) => {
+          let _r = res.find(({ question: q }) => q === question);
+          if (_r) {
+            r.set(question, _r);
+          } else {
+            console.error(
+              `Error: Question ${question} not in response, but is in question collection!!`
+            );
+          }
+        });
+        setResponses(r);
+      })
+      .catch(err => {
+        alert(`Error getting response - ${err.message}`);
+      })
+      .finally(() => {
+        setResLoad("");
+      });
+    // eslint-disable-next-line
   }, [ques]);
 
   useEffect(() => {
@@ -50,11 +68,6 @@ const QueBlockList = ({ history }) => {
     }
   }, [mode, ques, getResponses]);
 
-  if (globalState.isLoading) {
-    globalState.setMainClass("");
-    return <div>Loading...</div>;
-  }
-
   const selRegs = globalState._regulations.selected;
   const selFuncs = globalState._regulations.selectedFuns;
   const que = globalState._questions;
@@ -66,102 +79,126 @@ const QueBlockList = ({ history }) => {
   let mainContent = null;
 
   if (mode === QUE_LIST) {
-    const saveResponse = (qid, ans) => {
+    const saveResponse = r => {
       setResLoad(SAVING_RES);
       return globalState
-        .saveAns({ queId: qid, ans })
-        .then(() => {
-          setResLoad("");
-        })
+        .saveAns(r)
         .catch(err => {
           alert(`Saving answer failed - ${err.message}`);
+        })
+        .finally(() => {
+          setResLoad("");
         });
     };
 
     const handleBack = () => {
       setMode(QUE_BLOCK);
       setQues([]);
-      setResponses({});
+      setResponses(new Map());
     };
 
-    const handleResponse = (quesId, resp) => {
-      saveResponse(quesId, resp).then(() => {
-        let res = { ...responses };
-        res[quesId] = resp;
-        setResponses(res);
-      });
+    const handleResponse = ({ question }, resp) => {
+      let _r = responses.get(question);
+      if (_r) {
+        _r.answer = resp;
+        saveResponse(_r).then(() => {
+          setResponses(responses.set(question, _r));
+        });
+      } else {
+        console.error(`Quetion - ${question} is not found!`);
+      }
     };
 
     const selectQuestion = idx => {
       const queEl = document.querySelector(`#que-${idx}`);
       queEl.scrollIntoView();
     };
-    const isAnswered = idx => responses[idx];
+    const isAnswered = idx => {
+      return responses && responses.get(idx)
+        ? !!responses.get(idx).answer
+        : false;
+    };
 
-    const renderQueList = ({ id: idx }, ind) => (
-      <div
+    const renderQueList = ({ id: idx, question }, ind) => (
+      <List.Item
         key={idx}
         onClick={() => !resLoad && selectQuestion(idx)}
-        className={`que-list-item ${isAnswered(idx) ? "que-answered" : ""}`}
+        style={{ backgroundColor: isAnswered(question) ? "" : "#f3f3f3" }}
       >
-        Question-{ind + 1}
-      </div>
+        Question - {ind + 1}
+      </List.Item>
     );
-    const renderAnsOptions = (option, idx) => (
-      <label key={`${option}-${idx}`}>
-        <input
-          type="radio"
-          name={idx}
-          onChange={({ target }) => {
-            target.checked && handleResponse(idx, option);
-          }}
-          value={option}
-          checked={responses[idx] === option}
-          disabled={resLoad}
-        />
+
+    const renderAnsOptions = (option, { id: idx, question }) => (
+      <Radio
+        key={`${option}-${idx}`}
+        name={idx}
+        onChange={({ target }) => {
+          target.checked && handleResponse({ id: idx, question }, option);
+        }}
+        value={option}
+        checked={
+          responses.get(question) &&
+          responses.get(question).answer &&
+          responses.get(question).answer === option
+        }
+        disabled={!!resLoad}
+      >
         {option}
-      </label>
+      </Radio>
     );
 
     const questionsRenderer = (item, index) => (
-      <div
-        className={`que flex-column flex-spaced-stretch ${
-          isAnswered(item.id) ? "que-answered" : ""
-        }`}
+      <List.Item
+        style={{
+          backgroundColor: isAnswered(item.question) ? "" : "#f3f3f3"
+        }}
         key={item.id}
         id={`que-${item.id}`}
       >
-        <div className="que-description">
-          <span>Q-{index + 1}.&nbsp;</span>
-          {item.description}
+        <div>
+          <div>
+            <span>Q-{index + 1}.&nbsp;</span>
+            {item.description}
+          </div>
+          <Radio.Group>
+            {item.answerOptions.map(ans => renderAnsOptions(ans, item))}
+          </Radio.Group>
         </div>
-        <div className="que-responses flex-row flex-centered">
-          {item.answerOptions.map(ans => renderAnsOptions(ans, item.id))}
-        </div>
-      </div>
+      </List.Item>
     );
 
     asideContent = (
-      <>
-        <div className="flex-column flex-centered-stretch">
-          <button onClick={handleBack} disabled={resLoad}>
+      <Card
+        type="inner"
+        title="Questions"
+        extra={
+          <Button onClick={handleBack} disabled={resLoad}>
             Go back
-          </button>
-        </div>
-        <div className="flex-column flex-centered-stretch">
-          <span>Questions</span>
-          <div className="que-list flex-column">{ques.map(renderQueList)}</div>
-        </div>
-      </>
+          </Button>
+        }
+        className="limit-80vh"
+      >
+        <List
+          size="small"
+          dataSource={ques}
+          renderItem={renderQueList}
+          bordered
+        />
+      </Card>
     );
 
-    mainContent = ques.map(questionsRenderer);
+    mainContent = (
+      <Card title="Questions" className="limit-80vh">
+        <List dataSource={ques} renderItem={questionsRenderer} />
+      </Card>
+    );
   } else if (mode === QUE_BLOCK) {
     const handleUpdate = () => {
       let res = window.confirm(
         "This will change current selections. Continue?"
       );
-      res && history.push("/home");
+      res && history.push("/home", { update: "1" });
       res && globalState.setMainClass("");
       res && globalState._regulations.clearRegs();
     };
@@ -172,52 +209,50 @@ const QueBlockList = ({ history }) => {
     };
 
     const renderRegulation = ({ regulation }, idx) => (
-      <div key={idx}>{regulation}</div>
+      <Tag key={idx}>{regulation}</Tag>
     );
-    const renderFunction = (func, idx) => <div key={idx}>{func}</div>;
+    const renderFunction = (func, idx) => <Tag key={idx}>{func}</Tag>;
     const renderQueGroup = (queArr, idx) => (
-      <div
-        key={idx}
-        className="que-block flex-column flex-centered"
-        onClick={() => handleQBlockClick(queArr)}
-      >
-        <div>{queArr[0].function}</div>
+      <Card.Grid key={idx} onClick={() => handleQBlockClick(queArr)}>
+        <Tag>{queArr[0].function}</Tag>
         <div>Total Questions: {queArr.length}</div>
         <div>Estimated time: --</div>
         <div>About: --</div>
-      </div>
+      </Card.Grid>
     );
 
     asideContent = (
-      <>
-        <div className="flex-column flex-centered-stretch">
-          <button onClick={handleUpdate}>Update Selections</button>
+      <Card>
+        <div>
+          <Button onClick={handleUpdate} type="danger">
+            Update Selections
+          </Button>
         </div>
-        <div className="flex-column flex-centered-stretch">
-          <span>Regulations</span>
+        <div>
+          <div>Regulations - </div>
           {selRegs.map(renderRegulation)}
         </div>
-        <div className="flex-column flex-centered-stretch">
-          <span>Functions</span>
+        <div>
+          <div>Functions - </div>
           {selFuncs.map(renderFunction)}
         </div>
-      </>
+      </Card>
     );
 
-    mainContent = queGroups.map(renderQueGroup);
+    mainContent = (
+      <Card title="Question grouped by functions">
+        {queGroups.map(renderQueGroup)}
+      </Card>
+    );
   }
 
   return (
-    <section className="que-block-pane flex-row flex-stretched">
-      <aside className="selections flex-column">{asideContent}</aside>
-      <div
-        className={`que-blocks ${
-          mode === QUE_BLOCK ? "flex-row" : "flex-col que-list-container"
-        } flex-centered`}
-      >
-        {mainContent}
-      </div>
-    </section>
+    <Card loading={globalState.isLoading}>
+      <Row gutter={[16, 16]}>
+        <Col span={4}>{asideContent}</Col>
+        <Col span={20}>{mainContent}</Col>
+      </Row>
+    </Card>
   );
 };
 

@@ -2,17 +2,18 @@ import React from "react";
 import { observer } from "mobx-react";
 import { withRouter } from "react-router-dom";
 import { useGApp } from "../../utils";
-import "./user-header.css";
+import { Button } from "antd";
 
 const UserHeader = ({ history }) => {
   const globalState = useGApp();
+
   const logoutHandler = async () => {
     try {
       await globalState.logout();
       history.push("/");
     } catch (error) {
       if (error.response.status === 401) {
-        globalState.setToken("");
+        globalState.setCredentials();
         history.push("/");
       } else {
         alert(
@@ -21,12 +22,19 @@ const UserHeader = ({ history }) => {
       }
     }
   };
+
   return (
-    <div className="user-header flex-row flex-centered">
-      <div>Welcome User!</div>
-      <button onClick={logoutHandler}>Logout</button>
-    </div>
+    <>
+      <div style={{ flex: "2" }}>Welcome User!</div>
+      <Button
+        onClick={logoutHandler}
+        type="primary"
+        loading={globalState.isLoading}
+      >
+        Logout
+      </Button>
+    </>
   );
 };
 
-export default observer(withRouter(UserHeader));
+export default withRouter(observer(UserHeader));

@@ -1,21 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { observer } from "mobx-react";
-import { Tag } from "../../components";
+import { Tag, Card, Input, Button, Checkbox, Row, Col } from "antd";
 import { useGApp } from "../../utils";
-import "./style.css";
 
 const MODE_REG = "select-regulations";
 const MODE_FUNC = "select-functions";
 
-const SelRegAndFunc = ({ history }) => {
+const SelRegAndFunc = ({ history, location }) => {
   let [query, setQuery] = useState("");
   let [mode, setMode] = useState(MODE_REG);
 
   let globalState = useGApp();
 
   useEffect(() => {
-    globalState.getRegs();
-    globalState.setMainClass("");
+    globalState.getRegs().then(redirect => {
+      if (
+        redirect &&
+        (!location.state || (location.state && !location.state.update))
+      ) {
+        history.push("/quest-blocks");
+      }
+    });
     //eslint-disable-next-line
   }, []);
 
@@ -33,7 +38,9 @@ const SelRegAndFunc = ({ history }) => {
 
   const handleSearch = ({ target: { value: query } }) => setQuery(query);
   const changeMode = to => setMode(to);
-  const onDone = () => history.push("/quest-blocks");
+  const onDone = () => {
+    history.push("/quest-blocks", {});
+  };
 
   if (mode === MODE_REG) {
     searchPlaceholder = "Search For Regulations";
@@ -49,7 +56,7 @@ const SelRegAndFunc = ({ history }) => {
     isChecked = item => regs.isSelectedReg(item.id);
 
     nextButtonEl = (
-      <button
+      <Button
         onClick={() => {
           changeMode(MODE_FUNC);
           regs.clearFuncs();
@@ -57,7 +64,7 @@ const SelRegAndFunc = ({ history }) => {
         disabled={!selectedItems.length}
       >
         Next
-      </button>
+      </Button>
     );
   } else if (mode === MODE_FUNC) {
     searchPlaceholder = "Search For Functions";
@@ -73,11 +80,11 @@ const SelRegAndFunc = ({ history }) => {
     isChecked = item => regs.isSelectedFunc(item);
 
     nextButtonEl = (
-      <button onClick={onDone} disabled={!selectedItems.length}>
+      <Button onClick={onDone} disabled={!selectedItems.length}>
         Next
-      </button>
+      </Button>
     );
-    backButtonEl = <button onClick={() => changeMode(MODE_REG)}>Back</button>;
+    backButtonEl = <Button onClick={() => changeMode(MODE_REG)}>Back</Button>;
   }
 
   const renderTag = (item, idk) => (
@@ -87,45 +94,48 @@ const SelRegAndFunc = ({ history }) => {
   );
 
   const renderCheckBox = (item, idk) => (
-    <label key={idk} className="checkbox flex-row flex-start-stretch">
-      <input
-        type="checkbox"
-        onChange={({ target: { checked } }) =>
-          checked ? onSelect(item) : onDeSelect(item)
-        }
-        checked={isChecked(item)}
-      />
+    <Checkbox
+      key={idk}
+      size="small"
+      onChange={({ target: { checked } }) =>
+        checked ? onSelect(item) : onDeSelect(item)
+      }
+      checked={isChecked(item)}
+    >
       {getName(item)}
-    </label>
+    </Checkbox>
   );
 
-  if (globalState.isLoading) {
-    return <section>Loading!</section>;
-  }
-
   if (!items.length && !query) {
-    return <section>No Items Found!&nbsp;{backButtonEl}</section>;
+    return <Card>No Items Found!&nbsp;{backButtonEl}</Card>;
   }
 
   return (
-    <article className="selector-pane flex-column flex-spaced-centered">
-      <input
-        type="text"
-        placeholder={searchPlaceholder}
-        value={query}
-        onChange={handleSearch}
-      />
-      <div className="tag-pane flex-row flex-centered flex-wrapped">
-        {selectedItems.map(renderTag)}
-      </div>
-      <div className="checkbox-pane flex-row flex-wrapped flex-centered-stretch">
-        {items.map(renderCheckBox)}
-      </div>
-      <div className="action-pane flex-row flex-centered-stretch">
-        {nextButtonEl}
-        {backButtonEl}
-      </div>
-    </article>
+    <Card loading={globalState.isLoading}>
+      <Row gutter={[16, 16]}>
+        <Col>
+          <Input
+            type="text"
+            placeholder={searchPlaceholder}
+            value={query}
+            onChange={handleSearch}
+          />
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} type="flex" justify="center">
+        <Col>{selectedItems.map(renderTag)}</Col>
+      </Row>
+
+      <Row gutter={[16, 16]} type="flex" justify="center">
+        <Col>{items.map(renderCheckBox)}</Col>
+      </Row>
+
+      <Row gutter={[16, 16]} type="flex" justify="center">
+        <Col>{nextButtonEl}</Col>
+        <Col>{backButtonEl}</Col>
+      </Row>
+    </Card>
   );
 };
 
