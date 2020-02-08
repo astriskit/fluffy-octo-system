@@ -65,9 +65,11 @@ class AppService {
     return this._network.post(`/users/logout?access_token=${token}`, {});
   }
 
-  getUserRegulations(token) {
+  getUserRegulations(userId, token) {
     return this._network
-      .get(`RegulationsUsers?access_token=${token}`)
+      .get(
+        `RegulationsUsers?access_token=${token}&filter={"where":{"userId":"${userId}"}}`
+      )
       .then(this.extractData);
   }
 }
