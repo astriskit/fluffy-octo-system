@@ -24,6 +24,13 @@ const SelRegAndFunc = ({ history, location }) => {
     //eslint-disable-next-line
   }, []);
 
+  useEffect(() => {
+    if (query) {
+      setQuery("");
+    }
+    //eslint-disable-next-line
+  }, [mode]);
+
   const regs = globalState._regulations;
 
   let items = [],
@@ -106,7 +113,7 @@ const SelRegAndFunc = ({ history, location }) => {
     </Checkbox>
   );
 
-  if (!items.length && !query) {
+  if (!items.length && !query && !globalState.isLoading) {
     return <Card>No Items Found!&nbsp;{backButtonEl}</Card>;
   }
 
