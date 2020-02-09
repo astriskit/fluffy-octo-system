@@ -203,19 +203,20 @@ const QueBlockList = ({ history }) => {
     const renderFunction = (func, idx) => <Tag key={idx}>{func}</Tag>;
     const renderQueGroup = (queArr, idx) => (
       <Card.Grid key={idx} onClick={() => handleQBlockClick(queArr)}>
-        <Tag>{queArr[0].function}</Tag>
-        <div>Total Questions: {queArr.length}</div>
-        <div>
-          Answered:{" "}
-          {resLoad === LOADING_RES ? (
-            <Spin indicator={spinIcon} />
-          ) : (
-            queArr.map(({ question }) => isAnswered(question)).filter(Boolean)
-              .length
-          )}
-        </div>
-        <div>Estimated time: --</div>
-        <div>About: --</div>
+        <Card type="inner" size="small" title={queArr[0].function}>
+          <Tag>Total Questions: {queArr.length}</Tag>
+          <Tag>
+            Answered:{" "}
+            {resLoad === LOADING_RES ? (
+              <Spin indicator={spinIcon} />
+            ) : (
+              queArr.map(({ question }) => isAnswered(question)).filter(Boolean)
+                .length
+            )}
+          </Tag>
+          <Tag>Estimated time: --</Tag>
+          <Tag>About: --</Tag>
+        </Card>
       </Card.Grid>
     );
 
