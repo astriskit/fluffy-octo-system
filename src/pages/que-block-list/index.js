@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { observer } from "mobx-react";
-import { Card, Row, Col, Button, Tag, List, Radio } from "antd";
+import { Card, Row, Col, Button, Tag, List, Radio, Spin, Icon } from "antd";
 import { useGApp } from "../../utils";
 import "./index.css";
 
@@ -10,6 +10,8 @@ const QUE_LIST = "que-list";
 const LOADING_RES = "loading-responses";
 const SAVING_RES = "saving-response(s)";
 
+const spinIcon = <Icon type="loading" spin />;
+
 const QueBlockList = ({ history }) => {
   let globalState = useGApp();
   let [mode, setMode] = useState(QUE_BLOCK);
@@ -18,21 +20,13 @@ const QueBlockList = ({ history }) => {
   let [resLoad, setResLoad] = useState("");
 
   const getResponses = useCallback(() => {
-    if (!ques.length) return;
     setResLoad(LOADING_RES);
     globalState
       .getAns()
       .then(res => {
         let r = new Map();
-        ques.forEach(({ question }) => {
-          let _r = res.find(({ question: q }) => q === question);
-          if (_r) {
-            r.set(question, _r);
-          } else {
-            console.error(
-              `Error: Question ${question} not in response, but is in question collection!!`
-            );
-          }
+        res.forEach(_r => {
+          r.set(_r.question, _r);
         });
         setResponses(r);
       })
@@ -47,15 +41,9 @@ const QueBlockList = ({ history }) => {
 
   useEffect(() => {
     if (globalState.isQuestionable) {
-      globalState
-        .getQues()
-        .catch(err => {
-          alert(`Error while requesting questions- ${err.message}`);
-          history.push("/home");
-        })
-        .finally(() => {
-          globalState.setMainClass("flex-stretched");
-        });
+      globalState.getQues().catch(err => {
+        alert(`Error while requesting questions- ${err.message}`);
+      });
     } else {
       history.push("/home");
     }
@@ -63,7 +51,7 @@ const QueBlockList = ({ history }) => {
   }, []);
 
   useEffect(() => {
-    if (mode === QUE_LIST && ques.length) {
+    if ((mode === QUE_LIST && ques.length) || mode === QUE_BLOCK) {
       getResponses();
     }
   }, [mode, ques, getResponses]);
@@ -74,6 +62,12 @@ const QueBlockList = ({ history }) => {
   const queGroups = selFuncs
     .map(func => que.withFunction(func))
     .filter(arr => arr.length);
+
+  const isAnswered = idx => {
+    return responses && responses.get(idx)
+      ? !!responses.get(idx).answer
+      : false;
+  };
 
   let asideContent = null;
   let mainContent = null;
@@ -112,11 +106,6 @@ const QueBlockList = ({ history }) => {
     const selectQuestion = idx => {
       const queEl = document.querySelector(`#que-${idx}`);
       queEl.scrollIntoView();
-    };
-    const isAnswered = idx => {
-      return responses && responses.get(idx)
-        ? !!responses.get(idx).answer
-        : false;
     };
 
     const renderQueList = ({ id: idx, question }, ind) => (
@@ -216,6 +205,15 @@ const QueBlockList = ({ history }) => {
       <Card.Grid key={idx} onClick={() => handleQBlockClick(queArr)}>
         <Tag>{queArr[0].function}</Tag>
         <div>Total Questions: {queArr.length}</div>
+        <div>
+          Answered:{" "}
+          {resLoad === LOADING_RES ? (
+            <Spin indicator={spinIcon} />
+          ) : (
+            queArr.map(({ question }) => isAnswered(question)).filter(Boolean)
+              .length
+          )}
+        </div>
         <div>Estimated time: --</div>
         <div>About: --</div>
       </Card.Grid>
