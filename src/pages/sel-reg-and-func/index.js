@@ -13,14 +13,18 @@ const SelRegAndFunc = ({ history, location }) => {
   let globalState = useGApp();
 
   useEffect(() => {
-    globalState.getRegs().then(redirect => {
-      if (
-        redirect &&
-        (!location.state || (location.state && !location.state.update))
-      ) {
-        history.push("/quest-blocks");
-      }
-    });
+    if (globalState._userDet && globalState._userDet.role === "CSO") {
+      globalState.getRegs().then(redirect => {
+        if (
+          redirect &&
+          (!location.state || (location.state && !location.state.update))
+        ) {
+          history.push("/quest-blocks");
+        }
+      });
+    } else {
+      history.push("/quest-blocks");
+    }
     //eslint-disable-next-line
   }, []);
 

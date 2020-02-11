@@ -2,3 +2,8 @@
   max-height: 80vh;
   overflow: auto;
 }
+
+.aside-qblock .ant-card-body {
+  background-color: #152d59bf;
+  color: white;
+}

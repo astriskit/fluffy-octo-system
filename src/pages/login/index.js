@@ -35,6 +35,10 @@ const Login = props => {
     }
   };
 
+  const handleSignup = () => {
+    props.history.push("/sign-up");
+  };
+
   return (
     <Card title="Login" size="small" className="login-card">
       <Form layout="inline">
@@ -63,6 +67,11 @@ const Login = props => {
             type="primary"
           >
             Login
+          </Button>
+        </Form.Item>
+        <Form.Item>
+          <Button onClick={handleSignup} type="primary">
+            Signup
           </Button>
         </Form.Item>
       </Form>

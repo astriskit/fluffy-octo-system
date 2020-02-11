@@ -16,25 +16,48 @@ const AppModel = types
     }),
     _questions: types.optional(types.maybe(QuestionList), { all: [] }),
     _mainClass: "", // [ui]
-    _userId: ""
+    _userId: "",
+    _userDet: types.model({
+      username: "",
+      email: "",
+      emailVerified: false,
+      role: ""
+    })
   })
   .actions(self => ({
-    setMainClass: cls => (self._mainClass = cls),
+    setMainClass: cls => (self._mainClass = cls), // todo: obsolete/remove
     setLoading: loading => {
       self._loading = loading;
     },
-    setCredentials: ({ id: token = "", userId = "" }) => {
+    setCredentials: ({
+      id: token = "",
+      userId = "",
+      username,
+      email,
+      emailVerified,
+      role = ""
+    } = {}) => {
       self._token = token;
       self._userId = userId;
+      self._userDet = { username, email, emailVerified, role };
       localStorage.setItem("_token", token);
       localStorage.setItem("_userId", userId);
+      localStorage.setItem("_userDet", JSON.stringify(self._userDet));
     },
     login: flow(function*(email, password) {
       try {
         self.setLoading(true);
         let creds = yield appService.login(email, password);
+        let userDets = yield appService.getUser({
+          token: creds.id,
+          userId: creds.userId
+        });
+        if (!userDets.role) {
+          throw new Error("Role is not assigned. Contact Admin.");
+        }
         self._regulations.selected = [];
-        self.setCredentials(creds);
+        self.setCredentials({ ...userDets, ...creds });
+        return userDets.role;
       } catch (err) {
         throw err;
       } finally {
@@ -65,10 +88,13 @@ const AppModel = types
           self._token
         );
         let selectedRegs = selected.filter(({ archived = false }) => !archived);
-        if (selectedRegs.length) {
+        if (
+          selectedRegs.length ||
+          (self._userDet && self._userDet.role === "Delegatee")
+        ) {
           let selectedFuns = selectedRegs.reduce((acc, { functions }) => {
             if (!acc.length) {
-              return functions;
+              return functions || [];
             }
             return [...new Set([...functions, ...acc])];
           }, []);
@@ -91,13 +117,19 @@ const AppModel = types
           ({ regulation }) => regulation
         );
         const functions = self._regulations.selectedFuns;
-        if (!regulations.length || !functions.length) {
+        if (
+          self._userDet &&
+          self._userDet.role === "CSO" &&
+          (!regulations.length || !functions.length)
+        ) {
           throw new Error("EMPTY_REGS_FUNCS");
         }
         self.setLoading(true);
         let resultArr = yield appService.getRegulationsQuestionsMapping({
-          regulations: JSON.stringify(regulations, escape),
-          functions: JSON.stringify(functions),
+          regulations: regulations.length
+            ? JSON.stringify(regulations, escape)
+            : null,
+          functions: functions.length ? JSON.stringify(functions) : null,
           token: self._token
         });
         resultArr = resultArr
@@ -133,12 +165,27 @@ const AppModel = types
         throw error;
       }
     }),
+    getUsers: flow(function*() {
+      return yield appService.getUsers({ token: self._token });
+    }),
+    assignBlock: flow(function*(functionGroup, userId) {
+      return yield appService.assignQueBlock({
+        token: self._token,
+        functionGroup,
+        userId
+      });
+    }),
+    signUp: flow(function*(info) {
+      return yield appService.signUp(info);
+    }),
     boot: () => {},
     shut: () => {}
   }))
   .views(self => ({
     get isLoggedIn() {
-      return self._token && self._userId ? true : false;
+      return self._token && self._userId && self._userDet && self._userDet.role
+        ? true
+        : false;
     },
     get isLoading() {
       return self._loading;
