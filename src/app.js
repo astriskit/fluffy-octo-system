@@ -9,7 +9,12 @@ import AppModel from "./app-model";
 const store = AppModel.create({
   _token: localStorage.getItem("_token") || "",
   _userId: localStorage.getItem("_userId") || "",
-  _userDet: JSON.parse(localStorage.getItem("_userDet")) || null
+  _userDet: JSON.parse(localStorage.getItem("_userDet")) || {
+    username: "",
+    email: "",
+    emailVerified: false,
+    role: ""
+  }
 });
 
 const AppRouter = () => {
