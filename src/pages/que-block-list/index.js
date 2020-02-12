@@ -224,6 +224,7 @@ const QueBlockList = ({ history }) => {
         message.success(`User Assigned - ${nReq}`);
         nReq += 1;
       }
+      handleModalClose();
     } catch (error) {
       message.error(`One Or More Assigning Failed - ${error.message}`);
     } finally {
