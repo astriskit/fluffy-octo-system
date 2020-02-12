@@ -273,7 +273,7 @@ const QueBlockList = ({ history }) => {
       queEl.scrollIntoView();
     };
 
-    const renderQueList = (q, ind) => {
+    const renderQueList = q => {
       const item = role === "CSO" ? q : q.questionDetails;
       const { id: idx, question } = item;
       return (
@@ -282,7 +282,7 @@ const QueBlockList = ({ history }) => {
           onClick={() => !resLoad && selectQuestion(idx)}
           extra={
             <Icon
-              type="file-done"
+              type="check-circle"
               title="Answered"
               theme={isAnswered(question) ? "filled" : "outlined"}
             />
@@ -292,7 +292,7 @@ const QueBlockList = ({ history }) => {
             justifyContent: "space-between"
           }}
         >
-          Question - {ind + 1}
+          {question}
         </List.Item>
       );
     };
@@ -316,9 +316,9 @@ const QueBlockList = ({ history }) => {
       </Radio>
     );
 
-    const showQueInfo = ({ description, methods }) =>
+    const showQueInfo = ({ description, methods, question }) =>
       Modal.info({
-        title: "About Question",
+        title: `About Question ${question}`,
         content: (
           <>
             <p>{description}</p>
@@ -327,7 +327,7 @@ const QueBlockList = ({ history }) => {
         )
       });
 
-    const questionsRenderer = (q, index) => {
+    const questionsRenderer = q => {
       const item = role === "CSO" ? q : q.questionDetails;
       return (
         <List.Item
@@ -343,7 +343,8 @@ const QueBlockList = ({ history }) => {
         >
           <div>
             <div>
-              <span>Q-{index + 1}.&nbsp;</span>
+              <span style={{ fontWeight: "bold" }}>{item.question}</span>
+              &nbsp;&nbsp;
               {item.description}
             </div>
             <Radio.Group>
